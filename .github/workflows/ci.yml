@@ -1,0 +1,33 @@
+# Runs the same checks as before a PR: lint, types, unit tests, and a production build.
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      # The build only checks that the app compiles. Modules read these when they load, so it
+      # needs values, but never real ones: this build isn't deployed.
+      - run: npm run build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ci-placeholder
+          SUPABASE_SECRET_KEY: ci-placeholder
+          ZERODEV_PROJECT_ID: ci-placeholder
+          CIRCLE_API_KEY: ci-placeholder
